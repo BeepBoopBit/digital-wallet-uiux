@@ -1,23 +1,45 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../AuthContext';
 
-function Login({ onLogin }) {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Here you would typically make an API call to verify credentials
-    console.log('Login attempt:', email, password);
-    onLogin(); // Call the onLogin function passed from App.js
-    navigate('/dashboard'); // Navigate to dashboard after successful login
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await fetch('http://localhost:9500/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Login successful:', data);
+        login(data.token, data.user.userId); // Call the login function from context
+        navigate('/dashboard');
+      } else {
+        console.error('Login failed:', response.statusText);
+        setErrorMessage('Bad Credentials');
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      setErrorMessage('Bad Credentials');
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded shadow-md w-96">
         <h2 className="text-2xl font-bold mb-4">Login to DigiWallet</h2>
+        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
@@ -26,8 +48,7 @@ function Login({ onLogin }) {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
           <div>
@@ -37,20 +58,14 @@ function Login({ onLogin }) {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
           </div>
-          <button type="submit" className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition duration-200">
-            Log In
-          </button>
+          <button type="submit" className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md">Login</button>
         </form>
-        <p className="mt-4 text-center">
-          Don't have an account? <Link to="/register" className="text-blue-600 hover:underline">Register here</Link>
-        </p>
       </div>
     </div>
   );
-}
+};
 
 export default Login;

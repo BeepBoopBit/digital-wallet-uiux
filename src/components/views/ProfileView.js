@@ -1,22 +1,75 @@
-import React, { useState } from 'react';
-import { User, Mail, Phone, Lock } from 'lucide-react';
+import React, { useState, useEffect, useContext } from 'react';
+import { User, Mail, Phone } from 'lucide-react';
+import { AuthContext } from '../../AuthContext';
 
 function ProfileView() {
+  const { authState } = useContext(AuthContext);
+  const { userId, token } = authState;
   const [profile, setProfile] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
+    name: '',
+    email: '',
+    phone: '',
   });
-
   const [isEditing, setIsEditing] = useState(false);
 
   const handleEdit = () => {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async (e) => {
     setIsEditing(false);
-    // Here you would typically make an API call to update the user's profile
+    e.preventDefault();
+    try {
+      let theBody = JSON.stringify(profile);
+      // separate the name into first, middle, and last names
+      const names = profile.name.split(' ');
+      if (names.length === 1) {
+        theBody = JSON.stringify({
+          ...profile,
+          firstName: names[0],
+          middleName: '',
+          lastName: '',
+        });
+      } else if (names.length === 2) {
+        theBody = JSON.stringify({
+          ...profile,
+          firstName: names[0],
+          middleName: '',
+          lastName: names[1],
+        });
+      } else {
+        theBody = JSON.stringify({
+          ...profile,
+          firstName: names[0],
+          middleName: names[1],
+          lastName: names[2],
+        });
+
+      }
+
+      const response = await fetch(`http://localhost:9500/api/user-profiles/${userId}/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: theBody,
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // update the profile state with the new data
+        setProfile({
+          name: data.firstName + ' ' + data.middleName + ' ' + data.lastName,
+          email: data.user.email,
+          phone: data.mobileNumbers,
+        });
+        console.log('Profile updated successfully with data of: ', data);
+      } else {
+        console.error('Failed to update profile:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
     alert('Profile updated successfully!');
   };
 
@@ -24,6 +77,33 @@ function ProfileView() {
     const { name, value } = e.target;
     setProfile((prevProfile) => ({ ...prevProfile, [name]: value }));
   };
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(`http://localhost:9500/api/user-profiles/${userId}/get-user-profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Profile fetched successfully with data of: ', data);
+          setProfile({
+            name: data.firstName + ' ' + data.middleName + ' ' + data.lastName,
+            email: data.user.email,
+            phone: data.mobileNumbers,
+          });
+        } else {
+          console.error('Failed to fetch profile:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+      }
+    };
+
+    fetchProfile();
+  }, [userId, token]);
 
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
