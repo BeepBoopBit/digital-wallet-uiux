@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Home, CreditCard, DollarSign, Bell, User, Settings, LogOut, ShoppingBag } from 'lucide-react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../AuthContext';
+import { AuthContext } from './context/AuthContext';
 import HomeView from './views/HomeView';
 import TransactionsView from './views/TransactionsView';
 import NotificationsView from './views/NotificationsView';
