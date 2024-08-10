@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Home, CreditCard, DollarSign, Bell, User, Settings, LogOut, ShoppingBag } from 'lucide-react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
+import { AuthContext } from './context/AuthContext';
 import HomeView from './views/HomeView';
 import TransactionsView from './views/TransactionsView';
 import NotificationsView from './views/NotificationsView';
@@ -9,9 +10,10 @@ import SettingsView from './views/SettingsView';
 import AccountManagement from './AccountManagement';
 import StorePurchase from './StorePurchase';
 
-function Dashboard({ onLogout }) {
+function Dashboard() {
   const [activeTab, setActiveTab] = useState('home');
   const navigate = useNavigate();
+  const { authState, logout } = useContext(AuthContext);
 
   const sidebarLinks = [
     { icon: <Home />, label: 'Home', key: 'home' },
@@ -50,7 +52,7 @@ function Dashboard({ onLogout }) {
           ))}
         </nav>
         <div className="absolute bottom-0 w-64 p-4">
-          <button className="flex items-center text-gray-600 hover:text-red-500" onClick={onLogout}>
+          <button className="flex items-center text-gray-600 hover:text-red-500" onClick={logout}>
             <LogOut className="mr-2" size={18} />
             Logout
           </button>

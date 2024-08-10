@@ -7,12 +7,27 @@ function Register({ onLogin }) {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically make an API call to register the user
-    console.log('Registration attempt:', name, email, password);
-    onLogin(); // Automatically log in the user after successful registration
-    navigate('/dashboard'); // Navigate to dashboard after successful registration
+    try {
+      const response = await fetch('http://localhost:9500/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Registration successful:', data);
+        navigate('/dashboard'); // Navigate to dashboard after successful registration
+      } else {
+        console.error('Registration failed:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error during registration:', error);
+    }
   };
 
   return (
@@ -53,12 +68,10 @@ function Register({ onLogin }) {
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
             />
           </div>
-          <button type="submit" className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition duration-200">
-            Register
-          </button>
+          <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded-md">Register</button>
         </form>
         <p className="mt-4 text-center">
-          Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login here</Link>
+          Already have an account? <Link to="/login" className="text-blue-500">Log in</Link>
         </p>
       </div>
     </div>
