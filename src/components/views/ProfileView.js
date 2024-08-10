@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { User, Mail, Phone } from 'lucide-react';
-import { AuthContext } from '../../AuthContext';
+import { AuthContext } from '../context/AuthContext';
 
 function ProfileView() {
   const { authState } = useContext(AuthContext);
@@ -44,9 +44,15 @@ function ProfileView() {
           middleName: names[1],
           lastName: names[2],
         });
-
       }
 
+      theBody = JSON.parse(theBody);
+      theBody = JSON.stringify({
+        ...theBody,
+        mobileNumbers: profile.phone,
+      });
+
+      // Update User Profile
       const response = await fetch(`http://localhost:9500/api/user-profiles/${userId}/update`, {
         method: 'PUT',
         headers: {
@@ -58,14 +64,29 @@ function ProfileView() {
       if (response.ok) {
         const data = await response.json();
         // update the profile state with the new data
-        setProfile({
-          name: data.firstName + ' ' + data.middleName + ' ' + data.lastName,
-          email: data.user.email,
-          phone: data.mobileNumbers,
-        });
+        setProfile({ name: data.firstName + ' ' + data.middleName + ' ' + data.lastName, email: data.user.email, phone: data.mobileNumbers });
         console.log('Profile updated successfully with data of: ', data);
       } else {
         console.error('Failed to update profile:', response.statusText);
+      }
+
+      // Update User Service at /api/users/1/update
+      const response2 = await fetch(`http://localhost:9500/api/users/${userId}/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          email: profile.email,
+        }),
+      });
+      if (response2.ok) {
+        const data = await response2.json();
+        console.log('User updated successfully with data of: ', data);
+        setProfile((prevProfile) => ({ ...prevProfile, email: data.email }));
+      } else {
+        console.error('Failed to update user:', response2.statusText);
       }
     } catch (error) {
       console.error('Error updating profile:', error);
