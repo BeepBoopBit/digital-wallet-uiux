@@ -1,16 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Search } from 'lucide-react';
+import axios from 'axios';
+import { AuthContext } from '../context/AuthContext';
 
 function TransactionsView() {
-  const [transactions, setTransactions] = useState([
-    { id: 1, date: '2023-07-01', description: 'Grocery Store', amount: -75.50 },
-    { id: 2, date: '2023-07-02', description: 'Salary Deposit', amount: 3000 },
-    { id: 3, date: '2023-07-03', description: 'Electric Bill', amount: -120 },
-    { id: 4, date: '2023-07-04', description: 'Online Purchase', amount: -50.25 },
-    { id: 5, date: '2023-07-05', description: 'Restaurant', amount: -45 },
-  ]);
-
+  const { authState } = useContext(AuthContext);
+  const { userId, token } = authState;
+  const [transactions, setTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const accountsResponse = await axios.get(`http://localhost:9506/api/bank-accounts/user/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const accounts = accountsResponse.data;
+        let allTransactions = [];
+
+        for (const account of accounts) {
+          const transactionsResponse = await axios.get(`http://localhost:9501/api/transaction/user/${account.bankAccountId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          allTransactions = allTransactions.concat(transactionsResponse.data.map(transaction => ({
+            id: transaction.transactionId,
+            date: `${transaction.createdYear}-${String(transaction.createdMonth).padStart(2, '0')}-${String(transaction.createdDay).padStart(2, '0')}`,
+            description: transaction.description,
+            amount: transaction.amount
+          })));
+        }
+
+        setTransactions(allTransactions);
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+      }
+    };
+
+    if (userId && token) {
+      fetchTransactions();
+    }
+  }, [userId, token]);
 
   const filteredTransactions = transactions.filter(
     (transaction) =>
