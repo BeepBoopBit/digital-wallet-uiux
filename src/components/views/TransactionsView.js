@@ -12,6 +12,19 @@ function TransactionsView() {
   const [totalPages, setTotalPages] = useState(1);
   const transactionsPerPage = 10;
 
+  // Define the status to color mapping
+  const statusColors = {
+    PENDING: 'orange',
+    IN_PROGRESS: 'blue',
+    SUCCESS: 'green',
+    COMPLETED: 'darkgreen',
+    FAILED: 'red',
+    DISPUTE: 'purple',
+  };
+
+  // Function to get the color for a given status
+  const getStatusColor = (status) => statusColors[status] || 'black';
+
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
@@ -38,21 +51,20 @@ function TransactionsView() {
             id: transaction.transactionId,
             date: `${transaction.createdYear}-${String(transaction.createdMonth).padStart(2, '0')}-${String(transaction.createdDay).padStart(2, '0')}`,
             description: transaction.description,
-            amount: transaction.amount
+            amount: transaction.amount,
+            status: transaction.status,
+            color: getStatusColor(transaction.status),
           })));
         }
 
         setTransactions(allTransactions);
-        setTotalPages(Math.ceil(allTransactions.length / transactionsPerPage));
       } catch (error) {
         console.error('Error fetching transactions:', error);
       }
     };
 
-    if (userId && token) {
-      fetchTransactions();
-    }
-  }, [userId, token, currentPage]);
+    fetchTransactions();
+  }, [currentPage, userId, token]);
 
   const filteredTransactions = transactions.filter(
     (transaction) =>
@@ -85,6 +97,7 @@ function TransactionsView() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -94,6 +107,9 @@ function TransactionsView() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{transaction.description}</td>
                 <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   ${Math.abs(transaction.amount).toFixed(2)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: transaction.color }}>
+                  {transaction.status}
                 </td>
               </tr>
             ))}
