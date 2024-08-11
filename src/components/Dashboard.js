@@ -9,6 +9,7 @@ import ProfileView from './views/ProfileView';
 import SettingsView from './views/SettingsView';
 import AccountManagement from './AccountManagement';
 import StorePurchase from './StorePurchase';
+import CreateTransaction from './views/CreateTransaction';
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState('home');
@@ -18,6 +19,7 @@ function Dashboard() {
   const sidebarLinks = [
     { icon: <Home />, label: 'Home', key: 'home' },
     { icon: <CreditCard />, label: 'Accounts', key: 'accounts' },
+    { icon: <DollarSign />, label: 'Create Transaction', key: 'create-transaction' },
     { icon: <DollarSign />, label: 'Transactions', key: 'transactions' },
     { icon: <ShoppingBag />, label: 'Store Purchase', key: 'store-purchase' },
     { icon: <Bell />, label: 'Notifications', key: 'notifications' },
@@ -71,6 +73,7 @@ function Dashboard() {
             <Route path="/" element={<HomeView />} />
             <Route path="home" element={<HomeView />} />
             <Route path="accounts" element={<AccountManagement />} />
+            <Route path="create-transaction" element={<CreateTransaction />} />
             <Route path="transactions" element={<TransactionsView />} />
             <Route path="store-purchase" element={<StorePurchase />} />
             <Route path="notifications" element={<NotificationsView />} />

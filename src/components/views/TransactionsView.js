@@ -8,6 +8,9 @@ function TransactionsView() {
   const { userId, token } = authState;
   const [transactions, setTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const transactionsPerPage = 10;
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -26,6 +29,10 @@ function TransactionsView() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
+            params: {
+              page: currentPage,
+              limit: transactionsPerPage,
+            },
           });
           allTransactions = allTransactions.concat(transactionsResponse.data.map(transaction => ({
             id: transaction.transactionId,
@@ -36,6 +43,7 @@ function TransactionsView() {
         }
 
         setTransactions(allTransactions);
+        setTotalPages(Math.ceil(allTransactions.length / transactionsPerPage));
       } catch (error) {
         console.error('Error fetching transactions:', error);
       }
@@ -44,13 +52,19 @@ function TransactionsView() {
     if (userId && token) {
       fetchTransactions();
     }
-  }, [userId, token]);
+  }, [userId, token, currentPage]);
 
   const filteredTransactions = transactions.filter(
     (transaction) =>
       transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.amount.toString().includes(searchTerm)
   );
+
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -85,6 +99,25 @@ function TransactionsView() {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="flex justify-between items-center mt-4">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg"
+        >
+          Previous
+        </button>
+        <span className="text-gray-700">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg"
+        >
+          Next
+        </button>
       </div>
     </div>
   );

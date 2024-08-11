@@ -49,7 +49,8 @@ const AccountManagement = () => {
             <li key={account.bankAccountId} className="px-4 py-4 sm:px-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-indigo-600 truncate">{account.email}</p>
+                  <p className="text-sm font-medium text-indigo-600 truncate">{account.bankAccountId}</p>
+                  <p className="text-sm text-gray-500">{account.email}</p>
                   <p className="text-sm text-gray-500">{account.accountType}</p>
                 </div>
                 <div className="flex items-center">
