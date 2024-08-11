@@ -8,9 +8,10 @@ function TransactionsView() {
   const { userId, token } = authState;
   const [transactions, setTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const transactionsPerPage = 10;
+  const isFirst = true;
 
   // Define the status to color mapping
   const statusColors = {
@@ -36,18 +37,15 @@ function TransactionsView() {
 
         const accounts = accountsResponse.data;
         let allTransactions = [];
-
+        let localTotalPages = 0;
         for (const account of accounts) {
-          const transactionsResponse = await axios.get(`http://localhost:9501/api/transaction/user/${account.bankAccountId}`, {
+          const transactionsResponse = await axios.get(`http://localhost:9501/api/transaction/paginated/${account.bankAccountId}/${currentPage}/${transactionsPerPage}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-            params: {
-              page: currentPage,
-              limit: transactionsPerPage,
-            },
           });
-          allTransactions = allTransactions.concat(transactionsResponse.data.map(transaction => ({
+          localTotalPages += transactionsResponse.data.size;
+          allTransactions = allTransactions.concat(transactionsResponse.data.content.map(transaction => ({
             id: transaction.transactionId,
             date: `${transaction.createdYear}-${String(transaction.createdMonth).padStart(2, '0')}-${String(transaction.createdDay).padStart(2, '0')}`,
             description: transaction.description,
@@ -56,7 +54,7 @@ function TransactionsView() {
             color: getStatusColor(transaction.status),
           })));
         }
-
+        setTotalPages((localTotalPages/transactionsPerPage)-1);
         setTransactions(allTransactions);
       } catch (error) {
         console.error('Error fetching transactions:', error);
